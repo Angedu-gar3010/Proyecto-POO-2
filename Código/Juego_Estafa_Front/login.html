@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Inicio de sesión del juego educativo para aprender a reconocer estafas en internet."
+    />
+    <title>Iniciar sesión | Juego AntiEstafas</title>
+    <link rel="stylesheet" href="./styless.css" />
+  </head>
+
+  <body>
+    <main class="page-shell">
+      <section class="login-card" aria-labelledby="login-title">
+        <div class="form-panel">
+          <div class="brand" aria-label="Juego AntiEstafas">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img">
+                <path d="M12 2 20 5v6c0 5.2-3.4 9.3-8 11-4.6-1.7-8-5.8-8-11V5l8-3Z" />
+                <path d="m8.7 12 2.1 2.1 4.7-5" />
+              </svg>
+            </span>
+            <span>Juego AntiEstafas</span>
+          </div>
+
+          <div class="form-heading">
+            <p class="eyebrow">Bienvenido de nuevo</p>
+            <h1 id="login-title">Iniciar sesión</h1>
+            <p>Continúa aprendiendo a protegerte en internet.</p>
+          </div>
+
+          <form class="login-form" action="#" method="post">
+            <div class="field-group">
+              <label for="username">Nombre de usuario</label>
+              <div class="input-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 21a8 8 0 0 0-16 0" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  autocomplete="username"
+                  placeholder="Ingresa tu usuario"
+                  minlength="4"
+                  maxlength="20"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="label-row">
+                <label for="password">Contraseña</label>
+                <a href="#">¿Olvidaste tu contraseña?</a>
+              </div>
+              <div class="input-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="5" y="10" width="14" height="11" rx="2" />
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                </svg>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="Ingresa tu contraseña"
+                  minlength="8"
+                  maxlength="64"
+                  required
+                />
+              </div>
+            </div>
+
+            <label class="remember-option">
+              <input type="checkbox" name="remember" />
+              <span>Recordar mi sesión</span>
+            </label>
+
+            <button class="primary-button" type="submit">
+              Ingresar
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </button>
+          </form>
+
+          <p class="register-copy">
+            ¿Aún no tienes una cuenta?
+            <a href="#">Crear cuenta</a>
+          </p>
+        </div>
+
+        <aside class="visual-panel" aria-label="Consejo de seguridad digital">
+          <div class="decorative-orb orb-one" aria-hidden="true"></div>
+          <div class="decorative-orb orb-two" aria-hidden="true"></div>
+
+          <div class="illustration" aria-hidden="true">
+            <svg viewBox="0 0 520 360" role="img">
+              <defs>
+                <linearGradient id="screen" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0" stop-color="#172554" />
+                  <stop offset="1" stop-color="#243b82" />
+                </linearGradient>
+                <linearGradient id="shield" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0" stop-color="#4f6fff" />
+                  <stop offset="1" stop-color="#2947e8" />
+                </linearGradient>
+                <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#17306f" flood-opacity=".2" />
+                </filter>
+              </defs>
+
+              <ellipse cx="262" cy="323" rx="155" ry="18" fill="#b9c8ee" opacity=".55" />
+
+              <g filter="url(#shadow)">
+                <rect x="116" y="48" width="288" height="230" rx="22" fill="#fff" />
+                <rect x="140" y="76" width="240" height="34" rx="10" fill="#edf2ff" />
+                <circle cx="159" cy="93" r="5" fill="#ffb84d" />
+                <circle cx="177" cy="93" r="5" fill="#7891ff" />
+                <circle cx="195" cy="93" r="5" fill="#d3ddff" />
+
+                <rect x="140" y="130" width="104" height="122" rx="15" fill="url(#screen)" />
+                <rect x="263" y="130" width="117" height="16" rx="8" fill="#dfe7ff" />
+                <rect x="263" y="159" width="92" height="12" rx="6" fill="#eaf0ff" />
+                <rect x="263" y="185" width="117" height="12" rx="6" fill="#eaf0ff" />
+                <rect x="263" y="211" width="72" height="12" rx="6" fill="#eaf0ff" />
+
+                <path d="M160 222v-37M181 222v-57M202 222v-28M223 222v-74" stroke="#fff" stroke-width="12" stroke-linecap="round" />
+                <path d="m155 166 30-20 28 10 24-26" fill="none" stroke="#ffbd45" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+              </g>
+
+              <g transform="translate(300 205)" filter="url(#shadow)">
+                <path d="M47 0 88 15v34c0 37-21 64-41 75C27 113 6 86 6 49V15L47 0Z" fill="url(#shield)" />
+                <path d="m28 59 13 13 27-31" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+              </g>
+
+              <g transform="translate(74 100)">
+                <circle cx="24" cy="24" r="24" fill="#ffbd45" />
+                <path d="M24 12v16M24 37h.1" stroke="#fff" stroke-width="5" stroke-linecap="round" />
+              </g>
+
+              <g transform="translate(392 84)">
+                <circle cx="30" cy="30" r="30" fill="#fff" />
+                <path d="M30 15v30M15 30h30" stroke="#3657f3" stroke-width="7" stroke-linecap="round" />
+              </g>
+            </svg>
+          </div>
+
+          <div class="visual-copy">
+            <span class="lesson-badge">Seguridad digital</span>
+            <h2>Aprende a reconocer estafas</h2>
+            <p>
+              Analiza escenarios, identifica señales de alerta y toma mejores
+              decisiones antes de hacer clic.
+            </p>
+          </div>
+
+          <div class="slider-dots" aria-hidden="true">
+            <span class="active"></span>
+            <span></span>
+            <span></span>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>
