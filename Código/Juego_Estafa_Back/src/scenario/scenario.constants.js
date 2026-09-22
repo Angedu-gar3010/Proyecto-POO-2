@@ -1,0 +1,10 @@
+export const SCENARIO_TYPES = Object.freeze({
+  EMAIL: 'EMAIL',
+  MENSAJE: 'MENSAJE',
+  RED_SOCIAL: 'RED_SOCIAL',
+  SITIO_WEB: 'SITIO_WEB',
+  ENLACE: 'ENLACE',
+  ARCHIVO: 'ARCHIVO'
+});
+
+export const SCENARIO_TYPE_VALUES = Object.values(SCENARIO_TYPES);
