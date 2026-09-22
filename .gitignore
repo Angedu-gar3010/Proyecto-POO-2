@@ -1,2 +1,5 @@
 ~$*.docx
 ~$*.doc
+.env
+node_modules/
+*.log
