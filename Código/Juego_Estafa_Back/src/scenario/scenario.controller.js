@@ -9,30 +9,75 @@ const toPlayerScenario = (scenarioDocument) => {
   return scenario;
 };
 
+const PLAYER_SCENARIO_FIELDS = {
+  isFraud: 0,
+  explanation: 0,
+  recommendation: 0,
+  'signals.isCorrect': 0
+};
+
 export const getScenariosByLevel = async (req, res) => {
+  const { levelId } = req.params;
+
   try {
-    const scenarios = await Scenario.find({ level: req.params.levelId, active: true })
-      .sort({ order: 1 })
-      .populate('level', 'number name');
+    const scenarios = await Scenario
+      .find()
+      .where('level').equals(levelId)
+      .where('active').equals(true)
+      .select(PLAYER_SCENARIO_FIELDS)
+      .populate({
+        path: 'level',
+        select: 'number name'
+      })
+      .sort('order')
+      .lean();
+
     return res.status(200).json({
       success: true,
-      scenarios: scenarios.map(toPlayerScenario)
+      scenarios
     });
   } catch (error) {
     console.error('Error al consultar escenarios:', error);
-    return res.status(500).json({ success: false, message: 'Error interno al consultar escenarios' });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Error interno al consultar escenarios'
+    });
   }
 };
 
 export const getScenarioById = async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const scenario = await Scenario.findOne({ _id: req.params.id, active: true })
-      .populate('level', 'number name');
-    if (!scenario) return res.status(404).json({ success: false, message: 'Escenario no encontrado' });
-    return res.status(200).json({ success: true, scenario: toPlayerScenario(scenario) });
+    const scenario = await Scenario
+      .findById(id)
+      .where('active').equals(true)
+      .select(PLAYER_SCENARIO_FIELDS)
+      .populate({
+        path: 'level',
+        select: 'number name'
+      })
+      .lean();
+
+    if (!scenario) {
+      return res.status(404).json({
+        success: false,
+        message: 'Escenario no encontrado'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      scenario
+    });
   } catch (error) {
     console.error('Error al consultar escenario:', error);
-    return res.status(500).json({ success: false, message: 'Error interno al consultar el escenario' });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Error interno al consultar el escenario'
+    });
   }
 };
 
