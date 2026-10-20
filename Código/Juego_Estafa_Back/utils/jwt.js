@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-export const generateJwt = (payload) => {
+export const generarJwt = (payload) => {
   if (!process.env.SECRET_KEY) {
     throw new Error('SECRET_KEY no está configurada');
   }

@@ -1,7 +1,10 @@
 import User from './user.model.js';
-import { encrypt, checkPassword } from '../../utils/encrypt.js';
+import {
+  protegerContrasena,
+  verificarContrasena
+} from '../../utils/encrypt.js';
 
-export const getMe = async (req, res) => {
+export const obtenerMiPerfil = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
@@ -26,7 +29,7 @@ export const getMe = async (req, res) => {
   }
 };
 
-export const updateMe = async (req, res) => {
+export const actualizarMiPerfil = async (req, res) => {
   try {
     const updateData = {
       ...req.body
@@ -70,7 +73,7 @@ export const updateMe = async (req, res) => {
   }
 };
 
-export const updatePassword = async (req, res) => {
+export const actualizarContrasena = async (req, res) => {
   try {
     const {
       currentPassword,
@@ -87,7 +90,7 @@ export const updatePassword = async (req, res) => {
       });
     }
 
-    const validPassword = await checkPassword(
+    const validPassword = await verificarContrasena(
       user.password,
       currentPassword
     );
@@ -99,7 +102,7 @@ export const updatePassword = async (req, res) => {
       });
     }
 
-    user.password = await encrypt(newPassword);
+    user.password = await protegerContrasena(newPassword);
     await user.save();
 
     return res.status(200).json({

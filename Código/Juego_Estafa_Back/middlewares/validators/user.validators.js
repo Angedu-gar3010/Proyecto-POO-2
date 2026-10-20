@@ -8,7 +8,7 @@ const updateAllowedFields = [
   'profile'
 ];
 
-export const updateUserValidator = [
+export const validacionesActualizarUsuario = [
   body().custom((requestBody) => {
     const receivedFields = Object.keys(requestBody);
 
@@ -66,7 +66,7 @@ export const updateUserValidator = [
     .withMessage('El perfil seleccionado no es válido')
 ];
 
-export const updatePasswordValidator = [
+export const validacionesActualizarContrasena = [
   body('currentPassword')
     .exists({ values: 'falsy' })
     .withMessage('La contraseña actual es obligatoria')

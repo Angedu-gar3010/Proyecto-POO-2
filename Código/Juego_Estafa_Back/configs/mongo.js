@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 
-
 mongoose.connection.on('connecting', () => {
   console.log('MongoDB | Intentando conectar');
 });
@@ -21,7 +20,7 @@ mongoose.connection.on('error', (error) => {
   console.error('MongoDB | Error:', error.message);
 });
 
-export const connectDB = async () => {
+export const conectarBaseDeDatos = async () => {
   const uri = process.env.MONGODB_URI;
 
   if (!uri) {
@@ -41,10 +40,10 @@ export const connectDB = async () => {
     console.error('MongoDB | Causa:', error.cause);
 
     console.dir(error.reason, {
-        depth: null,
-        colors: true
+      depth: null,
+      colors: true
     });
 
     throw error;
-}
+  }
 };

@@ -2,7 +2,7 @@ import { body } from 'express-validator';
 import User from '../../src/user/user.model.js';
 import { USER_PROFILE_VALUES } from '../../src/user/user.constants.js';
 
-export const registerValidator = [
+export const validacionesRegistro = [
   body('name')
     .exists({ values: 'falsy' })
     .withMessage('El nombre es obligatorio')
@@ -67,7 +67,7 @@ export const registerValidator = [
     .withMessage('El rol no puede asignarse durante el registro')
 ];
 
-export const loginValidator = [
+export const validacionesInicioSesion = [
   body('username')
     .exists({ values: 'falsy' })
     .withMessage('El nombre de usuario es obligatorio')

@@ -1,6 +1,6 @@
-import SecurityPanel from './SecurityPanel.jsx';
+import PanelSeguridad from './SecurityPanel.jsx';
 
-export default function AuthLayout({
+export default function EstructuraAutenticacion({
   eyebrow,
   title,
   description,
@@ -29,7 +29,7 @@ export default function AuthLayout({
           {children}
         </div>
 
-        <SecurityPanel />
+        <PanelSeguridad />
       </section>
     </main>
   );

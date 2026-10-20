@@ -1,38 +1,38 @@
 import { Router } from 'express';
 import {
-  getMe,
-  updateMe,
-  updatePassword
+  obtenerMiPerfil,
+  actualizarMiPerfil,
+  actualizarContrasena
 } from './user.controller.js';
-import { validateJwt } from '../../middlewares/validate.jwt.js';
-import { validateFields } from '../../middlewares/validate.fields.js';
+import { validarJwt } from '../../middlewares/validate.jwt.js';
+import { validarCampos } from '../../middlewares/validate.fields.js';
 import {
-  updateUserValidator,
-  updatePasswordValidator
+  validacionesActualizarUsuario,
+  validacionesActualizarContrasena
 } from '../../middlewares/validators/user.validators.js';
 
 const router = Router();
 
 router.get(
   '/me',
-  validateJwt,
-  getMe
+  validarJwt,
+  obtenerMiPerfil
 );
 
 router.patch(
   '/me',
-  validateJwt,
-  updateUserValidator,
-  validateFields,
-  updateMe
+  validarJwt,
+  validacionesActualizarUsuario,
+  validarCampos,
+  actualizarMiPerfil
 );
 
 router.patch(
   '/me/password',
-  validateJwt,
-  updatePasswordValidator,
-  validateFields,
-  updatePassword
+  validarJwt,
+  validacionesActualizarContrasena,
+  validarCampos,
+  actualizarContrasena
 );
 
 export default router;

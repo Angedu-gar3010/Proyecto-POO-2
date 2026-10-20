@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import AuthLayout from '../components/AuthLayout.jsx';
-import FormField from '../components/FormField.jsx';
-import { register, saveSession } from '../services/auth.js';
+import EstructuraAutenticacion from '../components/AuthLayout.jsx';
+import CampoFormulario from '../components/FormField.jsx';
+import { registrarUsuario, guardarSesion } from '../services/auth.js';
 
-export default function RegisterPage({ onBackToLogin }) {
-  const [pending, setPending] = useState(false);
-  const [feedback, setFeedback] = useState(null);
+export default function PaginaRegistro({ alVolverAlInicioSesion }) {
+  const [pending, establecerCargando] = useState(false);
+  const [feedback, establecerMensaje] = useState(null);
 
-  async function handleSubmit(event) {
+  async function manejarEnvio(event) {
     event.preventDefault();
 
     if (pending) return;
@@ -17,48 +17,51 @@ export default function RegisterPage({ onBackToLogin }) {
     const confirmation = fields.get('confirmPassword');
 
     if (password !== confirmation) {
-      setFeedback({
+      establecerMensaje({
         type: 'error',
         message: 'Las contraseñas no coinciden.',
       });
       return;
     }
 
-    setPending(true);
-    setFeedback(null);
+    establecerCargando(true);
+    establecerMensaje(null);
 
     try {
-      const data = await register({
+      const data = await registrarUsuario({
         name: fields.get('name'),
         username: fields.get('username'),
         password,
         profile: fields.get('profile'),
       });
 
-      saveSession(data);
+      guardarSesion(data);
 
-      setFeedback({
+      establecerMensaje({
         type: 'success',
         message: 'Cuenta creada correctamente. Ya puedes iniciar sesión.',
       });
     } catch (error) {
-      setFeedback({
+      establecerMensaje({
         type: 'error',
         message: error.message,
       });
     } finally {
-      setPending(false);
+      establecerCargando(false);
     }
   }
 
   return (
-    <AuthLayout
+    <EstructuraAutenticacion
       eyebrow="Empieza a aprender"
       title="Crear cuenta"
       description="Únete y aprende a identificar estafas en internet."
     >
-      <form className="auth-form register-form" onSubmit={handleSubmit}>
-        <FormField id="name" label="Nombre completo">
+      <form
+        className="auth-form register-form"
+        onSubmit={manejarEnvio}
+      >
+        <CampoFormulario id="name" label="Nombre completo">
           <input
             id="name"
             name="name"
@@ -69,9 +72,9 @@ export default function RegisterPage({ onBackToLogin }) {
             maxLength={50}
             required
           />
-        </FormField>
+        </CampoFormulario>
 
-        <FormField id="username" label="Nombre de usuario">
+        <CampoFormulario id="username" label="Nombre de usuario">
           <input
             id="username"
             name="username"
@@ -84,10 +87,11 @@ export default function RegisterPage({ onBackToLogin }) {
             title="Usa de 4 a 20 letras, números, puntos, guiones o guiones bajos."
             required
           />
-        </FormField>
+        </CampoFormulario>
 
         <div className="field-group">
           <label htmlFor="profile">Perfil</label>
+
           <div className="input-wrap">
             <select id="profile" name="profile" defaultValue="OTRO">
               <option value="ESTUDIANTE">Estudiante</option>
@@ -100,7 +104,7 @@ export default function RegisterPage({ onBackToLogin }) {
           </div>
         </div>
 
-        <FormField id="password" label="Contraseña" icon="lock">
+        <CampoFormulario id="password" label="Contraseña" icon="lock">
           <input
             id="password"
             name="password"
@@ -111,13 +115,13 @@ export default function RegisterPage({ onBackToLogin }) {
             maxLength={64}
             required
           />
-        </FormField>
+        </CampoFormulario>
 
         <p className="field-hint">
           Mínimo 8 caracteres, con mayúscula, minúscula y número.
         </p>
 
-        <FormField
+        <CampoFormulario
           id="confirmPassword"
           label="Confirmar contraseña"
           icon="lock"
@@ -130,9 +134,13 @@ export default function RegisterPage({ onBackToLogin }) {
             placeholder="Repite tu contraseña"
             required
           />
-        </FormField>
+        </CampoFormulario>
 
-        <button className="primary-button" type="submit" disabled={pending}>
+        <button
+          className="primary-button"
+          type="submit"
+          disabled={pending}
+        >
           {pending ? 'Creando cuenta...' : 'Crear cuenta'}
           {!pending && <span aria-hidden="true">→</span>}
         </button>
@@ -146,10 +154,14 @@ export default function RegisterPage({ onBackToLogin }) {
 
       <p className="switch-copy">
         ¿Ya tienes una cuenta?{' '}
-        <button className="text-button" type="button" onClick={onBackToLogin}>
+        <button
+          className="text-button"
+          type="button"
+          onClick={alVolverAlInicioSesion}
+        >
           Iniciar sesión
         </button>
       </p>
-    </AuthLayout>
+    </EstructuraAutenticacion>
   );
 }
