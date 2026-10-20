@@ -1,4 +1,4 @@
-async function request(path, values) {
+async function realizarSolicitud(path, values) {
   let response;
 
   try {
@@ -28,15 +28,20 @@ async function request(path, values) {
   return data;
 }
 
-export function login({ username, password }) {
-  return request('login', {
+export function iniciarSesion({ username, password }) {
+  return realizarSolicitud('login', {
     username: username.trim(),
     password,
   });
 }
 
-export function register({ name, username, password, profile }) {
-  return request('register', {
+export function registrarUsuario({
+  name,
+  username,
+  password,
+  profile,
+}) {
+  return realizarSolicitud('register', {
     name: name.trim(),
     username: username.trim(),
     password,
@@ -44,12 +49,13 @@ export function register({ name, username, password, profile }) {
   });
 }
 
-export function saveSession(data, remember = false) {
+export function guardarSesion(data, remember = false) {
   const key = 'antiestafas.session';
   const selectedStorage = remember ? localStorage : sessionStorage;
   const otherStorage = remember ? sessionStorage : localStorage;
 
   otherStorage.removeItem(key);
+
   selectedStorage.setItem(
     key,
     JSON.stringify({

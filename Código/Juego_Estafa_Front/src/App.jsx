@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import LoginPage from './pages/LoginPage.jsx';
-import RegisterPage from './pages/RegisterPage.jsx';
+import PaginaInicioSesion from './pages/LoginPage.jsx';
+import PaginaRegistro from './pages/RegisterPage.jsx';
 
-export default function App() {
-  const [page, setPage] = useState('login');
+export default function Aplicacion() {
+  const [page, establecerPagina] = useState('login');
 
   return page === 'login' ? (
-    <LoginPage onCreateAccount={() => setPage('register')} />
+    <PaginaInicioSesion
+      alCrearCuenta={() => establecerPagina('register')}
+    />
   ) : (
-    <RegisterPage onBackToLogin={() => setPage('login')} />
+    <PaginaRegistro
+      alVolverAlInicioSesion={() => establecerPagina('login')}
+    />
   );
 }

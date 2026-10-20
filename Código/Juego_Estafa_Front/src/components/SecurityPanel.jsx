@@ -1,4 +1,4 @@
-export default function SecurityPanel() {
+export default function PanelSeguridad() {
   return (
     <aside
       className="visual-panel"
@@ -18,10 +18,12 @@ export default function SecurityPanel() {
             <stop offset="0" stopColor="#172554" />
             <stop offset="1" stopColor="#243b82" />
           </linearGradient>
+
           <linearGradient id="shield" x1="0" x2="1" y1="0" y2="1">
             <stop offset="0" stopColor="#4f6fff" />
             <stop offset="1" stopColor="#2947e8" />
           </linearGradient>
+
           <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
             <feDropShadow
               dx="0"
@@ -43,17 +45,67 @@ export default function SecurityPanel() {
         />
 
         <g filter="url(#shadow)">
-          <rect x="116" y="48" width="288" height="230" rx="22" fill="#fff" />
-          <rect x="140" y="76" width="240" height="34" rx="10" fill="#edf2ff" />
+          <rect
+            x="116"
+            y="48"
+            width="288"
+            height="230"
+            rx="22"
+            fill="#fff"
+          />
+          <rect
+            x="140"
+            y="76"
+            width="240"
+            height="34"
+            rx="10"
+            fill="#edf2ff"
+          />
+
           <circle cx="159" cy="93" r="5" fill="#ffb84d" />
           <circle cx="177" cy="93" r="5" fill="#7891ff" />
           <circle cx="195" cy="93" r="5" fill="#d3ddff" />
 
-          <rect x="140" y="130" width="104" height="122" rx="15" fill="url(#screen)" />
-          <rect x="263" y="130" width="117" height="16" rx="8" fill="#dfe7ff" />
-          <rect x="263" y="159" width="92" height="12" rx="6" fill="#eaf0ff" />
-          <rect x="263" y="185" width="117" height="12" rx="6" fill="#eaf0ff" />
-          <rect x="263" y="211" width="72" height="12" rx="6" fill="#eaf0ff" />
+          <rect
+            x="140"
+            y="130"
+            width="104"
+            height="122"
+            rx="15"
+            fill="url(#screen)"
+          />
+          <rect
+            x="263"
+            y="130"
+            width="117"
+            height="16"
+            rx="8"
+            fill="#dfe7ff"
+          />
+          <rect
+            x="263"
+            y="159"
+            width="92"
+            height="12"
+            rx="6"
+            fill="#eaf0ff"
+          />
+          <rect
+            x="263"
+            y="185"
+            width="117"
+            height="12"
+            rx="6"
+            fill="#eaf0ff"
+          />
+          <rect
+            x="263"
+            y="211"
+            width="72"
+            height="12"
+            rx="6"
+            fill="#eaf0ff"
+          />
 
           <path
             d="M160 222v-37M181 222v-57M202 222v-28M223 222v-74"
