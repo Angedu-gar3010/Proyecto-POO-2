@@ -1,9 +1,12 @@
 import User from '../user/user.model.js';
 import { USER_ROLES } from '../user/user.constants.js';
-import { encrypt, checkPassword } from '../../utils/encrypt.js';
-import { generateJwt } from '../../utils/jwt.js';
+import {
+  protegerContrasena,
+  verificarContrasena
+} from '../../utils/encrypt.js';
+import { generarJwt } from '../../utils/jwt.js';
 
-export const register = async (req, res) => {
+export const registrarUsuario = async (req, res) => {
   try {
     const {
       name,
@@ -12,7 +15,7 @@ export const register = async (req, res) => {
       profile
     } = req.body;
 
-    const hashedPassword = await encrypt(password);
+    const hashedPassword = await protegerContrasena(password);
 
     const user = await User.create({
       name,
@@ -22,7 +25,7 @@ export const register = async (req, res) => {
       role: USER_ROLES.USER
     });
 
-    const token = generateJwt({
+    const token = generarJwt({
       uid: user._id.toString(),
       role: user.role
     });
@@ -50,7 +53,7 @@ export const register = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
+export const iniciarSesion = async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -71,7 +74,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const validPassword = await checkPassword(
+    const validPassword = await verificarContrasena(
       user.password,
       password
     );
@@ -83,7 +86,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = generateJwt({
+    const token = generarJwt({
       uid: user._id.toString(),
       role: user.role
     });

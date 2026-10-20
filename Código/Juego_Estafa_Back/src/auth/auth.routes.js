@@ -1,28 +1,28 @@
 import { Router } from 'express';
 import {
-  register,
-  login
+  registrarUsuario,
+  iniciarSesion
 } from './auth.controller.js';
 import {
-  registerValidator,
-  loginValidator
+  validacionesRegistro,
+  validacionesInicioSesion
 } from '../../middlewares/validators/auth.validators.js';
-import { validateFields } from '../../middlewares/validate.fields.js';
+import { validarCampos } from '../../middlewares/validate.fields.js';
 
 const router = Router();
 
 router.post(
   '/register',
-  registerValidator,
-  validateFields,
-  register
+  validacionesRegistro,
+  validarCampos,
+  registrarUsuario
 );
 
 router.post(
   '/login',
-  loginValidator,
-  validateFields,
-  login
+  validacionesInicioSesion,
+  validarCampos,
+  iniciarSesion
 );
 
 export default router;

@@ -7,9 +7,9 @@ import authRoutes from '../src/auth/auth.routes.js';
 import userRoutes from '../src/user/user.routes.js';
 import levelRoutes from '../src/level/level.routes.js';
 import scenarioRoutes from '../src/scenario/scenario.routes.js';
-import { limiter } from '../middlewares/rate.limit.js';
+import { limitadorSolicitudes } from '../middlewares/rate.limit.js';
 
-const configureMiddlewares = (app) => {
+const configurarIntermediarios = (app) => {
   app.use(helmet());
   app.use(cors());
 
@@ -22,14 +22,14 @@ const configureMiddlewares = (app) => {
     limit: '1mb'
   }));
 
-  app.use(limiter);
+  app.use(limitadorSolicitudes);
 
   if (process.env.NODE_ENV !== 'production') {
     app.use(morgan('dev'));
   }
 };
 
-const configureRoutes = (app) => {
+const configurarRutas = (app) => {
   app.get('/api/v1/health', (_req, res) => {
     return res.status(200).json({
       success: true,
@@ -50,17 +50,17 @@ const configureRoutes = (app) => {
   });
 };
 
-export const createApp = () => {
+export const crearAplicacion = () => {
   const app = express();
 
-  configureMiddlewares(app);
-  configureRoutes(app);
+  configurarIntermediarios(app);
+  configurarRutas(app);
 
   return app;
 };
 
-export const initServer = async () => {
-  const app = createApp();
+export const iniciarServidor = async () => {
+  const app = crearAplicacion();
   const port = Number(process.env.PORT) || 3000;
 
   return new Promise((resolve, reject) => {

@@ -1,12 +1,12 @@
 import 'dotenv/config';
 
-import { connectDB } from './configs/mongo.js';
-import { initServer } from './configs/app.js';
+import { conectarBaseDeDatos } from './configs/mongo.js';
+import { iniciarServidor } from './configs/app.js';
 
-const startApp = async () => {
+const iniciarAplicacion = async () => {
   try {
-    await connectDB();
-    await initServer();
+    await conectarBaseDeDatos();
+    await iniciarServidor();
   } catch (error) {
     console.error(
       'No se pudo iniciar la aplicación:',
@@ -17,4 +17,4 @@ const startApp = async () => {
   }
 };
 
-startApp();
+iniciarAplicacion();

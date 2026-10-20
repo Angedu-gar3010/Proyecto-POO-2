@@ -1,27 +1,62 @@
 import { Router } from 'express';
 import { USER_ROLES } from '../user/user.constants.js';
-import { validateJwt } from '../../middlewares/validate.jwt.js';
-import { authorizeRoles } from '../../middlewares/validate.roles.js';
-import { validateFields } from '../../middlewares/validate.fields.js';
+import { validarJwt } from '../../middlewares/validate.jwt.js';
+import { autorizarRoles } from '../../middlewares/validate.roles.js';
+import { validarCampos } from '../../middlewares/validate.fields.js';
 import {
-  levelIdValidator,
-  createLevelValidator,
-  updateLevelValidator
+  validacionesIdNivel,
+  validacionesCrearNivel,
+  validacionesActualizarNivel
 } from '../../middlewares/validators/level.validators.js';
 import {
-  getLevels,
-  getLevelById,
-  createLevel,
-  updateLevel,
-  deactivateLevel
+  obtenerNiveles,
+  obtenerNivelPorId,
+  crearNivel,
+  actualizarNivel,
+  desactivarNivel
 } from './level.controller.js';
 
 const router = Router();
 
-router.get('/', validateJwt, getLevels);
-router.get('/:id', validateJwt, levelIdValidator, validateFields, getLevelById);
-router.post('/', validateJwt, authorizeRoles(USER_ROLES.ADMIN), createLevelValidator, validateFields, createLevel);
-router.patch('/:id', validateJwt, authorizeRoles(USER_ROLES.ADMIN), updateLevelValidator, validateFields, updateLevel);
-router.delete('/:id', validateJwt, authorizeRoles(USER_ROLES.ADMIN), levelIdValidator, validateFields, deactivateLevel);
+router.get(
+  '/',
+  validarJwt,
+  obtenerNiveles
+);
+
+router.get(
+  '/:id',
+  validarJwt,
+  validacionesIdNivel,
+  validarCampos,
+  obtenerNivelPorId
+);
+
+router.post(
+  '/',
+  validarJwt,
+  autorizarRoles(USER_ROLES.ADMIN),
+  validacionesCrearNivel,
+  validarCampos,
+  crearNivel
+);
+
+router.patch(
+  '/:id',
+  validarJwt,
+  autorizarRoles(USER_ROLES.ADMIN),
+  validacionesActualizarNivel,
+  validarCampos,
+  actualizarNivel
+);
+
+router.delete(
+  '/:id',
+  validarJwt,
+  autorizarRoles(USER_ROLES.ADMIN),
+  validacionesIdNivel,
+  validarCampos,
+  desactivarNivel
+);
 
 export default router;
