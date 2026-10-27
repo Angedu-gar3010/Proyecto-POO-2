@@ -1,27 +1,90 @@
 import { Router } from 'express';
-import { USER_ROLES } from '../user/user.constants.js';
-import { validateJwt } from '../../middlewares/validate.jwt.js';
-import { authorizeRoles } from '../../middlewares/validate.roles.js';
-import { validateFields } from '../../middlewares/validate.fields.js';
+import { body } from 'express-validator';
+
+import { ROLES, ROLES_JUGADOR } from '../user/user.constants.js';
+import { validarJwt } from '../../middlewares/validate.jwt.js';
+import { autorizarRoles } from '../../middlewares/validate.roles.js';
+import { validarCampos } from '../../middlewares/validate.fields.js';
+import { permitirCampos } from '../../middlewares/validators/auth.validators.js';
+
 import {
-  levelIdValidator,
-  createLevelValidator,
-  updateLevelValidator
+  validacionesIdNivel,
+  validacionesCrearNivel,
+  validacionesActualizarNivel,
 } from '../../middlewares/validators/level.validators.js';
+
 import {
-  getLevels,
-  getLevelById,
-  createLevel,
-  updateLevel,
-  deactivateLevel
+  obtenerNiveles,
+  obtenerNivelPorId,
+  crearNivel,
+  actualizarNivel,
+  desactivarNivel,
 } from './level.controller.js';
 
-const router = Router();
+import {
+  iniciarNivel,
+  responderEscenario,
+} from '../progreso/progreso.controller.js';
 
-router.get('/', validateJwt, getLevels);
-router.get('/:id', validateJwt, levelIdValidator, validateFields, getLevelById);
-router.post('/', validateJwt, authorizeRoles(USER_ROLES.ADMIN), createLevelValidator, validateFields, createLevel);
-router.patch('/:id', validateJwt, authorizeRoles(USER_ROLES.ADMIN), updateLevelValidator, validateFields, updateLevel);
-router.delete('/:id', validateJwt, authorizeRoles(USER_ROLES.ADMIN), levelIdValidator, validateFields, deactivateLevel);
+const rutas = Router();
 
-export default router;
+rutas.use(validarJwt);
+
+rutas.get('/', obtenerNiveles);
+
+rutas.get(
+  '/:id',
+  validacionesIdNivel,
+  validarCampos,
+  obtenerNivelPorId,
+);
+
+rutas.post(
+  '/:id/start',
+  autorizarRoles(...ROLES_JUGADOR),
+  validacionesIdNivel,
+  validarCampos,
+  iniciarNivel,
+);
+
+rutas.post(
+  '/:id/answer',
+  autorizarRoles(...ROLES_JUGADOR),
+  validacionesIdNivel,
+  permitirCampos(['escenarioId', 'esFraude', 'senales']),
+  body('escenarioId').isMongoId(),
+  body('esFraude').custom((valor) => typeof valor === 'boolean'),
+  body('senales')
+    .isArray({ max: 50 })
+    .bail()
+    .custom((valores) => new Set(valores).size === valores.length),
+  body('senales.*').isMongoId(),
+  validarCampos,
+  responderEscenario,
+);
+
+rutas.post(
+  '/',
+  autorizarRoles(ROLES.ADMIN),
+  validacionesCrearNivel,
+  validarCampos,
+  crearNivel,
+);
+
+rutas.patch(
+  '/:id',
+  autorizarRoles(ROLES.ADMIN),
+  validacionesActualizarNivel,
+  validarCampos,
+  actualizarNivel,
+);
+
+rutas.delete(
+  '/:id',
+  autorizarRoles(ROLES.ADMIN),
+  validacionesIdNivel,
+  validarCampos,
+  desactivarNivel,
+);
+
+export default rutas;

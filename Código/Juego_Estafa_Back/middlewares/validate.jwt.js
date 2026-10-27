@@ -1,55 +1,49 @@
 import jwt from 'jsonwebtoken';
-import User from '../src/user/user.model.js';
+import Usuario from '../src/user/user.model.js';
+import { ROLES } from '../src/user/user.constants.js';
+import { crearError } from '../utils/error.http.js';
 
-export const validateJwt = async (req, res, next) => {
-  try {
-    const authorization = req.headers.authorization;
+export async function validarJwt(peticion, _respuesta, siguiente) {
+  const cabecera = peticion.headers.authorization;
 
-    if (!authorization?.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token de autenticación requerido'
-      });
-    }
-
-    const token = authorization.slice(7);
-
-    const decoded = jwt.verify(
-      token,
-      process.env.SECRET_KEY,
-      {
-        algorithms: ['HS256']
-      }
-    );
-
-    const user = await User.findById(decoded.uid);
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'El usuario del token ya no existe'
-      });
-    }
-
-    if (!user.status) {
-      return res.status(403).json({
-        success: false,
-        message: 'La cuenta está desactivada'
-      });
-    }
-
-    req.user = {
-      id: user._id.toString(),
-      username: user.username,
-      role: user.role,
-      profile: user.profile
-    };
-
-    return next();
-  } catch (error) {
-    return res.status(401).json({
-      success: false,
-      message: 'Token inválido o expirado'
-    });
+  if (!cabecera?.startsWith('Bearer ')) {
+    throw crearError(401, 'Debes iniciar sesión.');
   }
-};
+
+  let contenido;
+
+  try {
+    contenido = jwt.verify(
+      cabecera.slice(7),
+      process.env.SECRET_KEY,
+      { algorithms: ['HS256'] },
+    );
+  } catch {
+    throw crearError(401, 'La sesión es inválida o ha expirado.');
+  }
+
+  if (!/^[a-f0-9]{24}$/i.test(contenido.uid || '')) {
+    throw crearError(401, 'La sesión no es válida.');
+  }
+
+  const usuario = await Usuario.findById(contenido.uid)
+    .select('+tokenVersion');
+
+  if (
+    !usuario?.status ||
+    (contenido.version ?? 0) !== usuario.tokenVersion
+  ) {
+    throw crearError(401, 'Debes iniciar sesión nuevamente.');
+  }
+
+  if (!Object.values(ROLES).includes(usuario.role)) {
+    throw crearError(403, 'Esta cuenta necesita la migración de roles.');
+  }
+
+  peticion.user = {
+    id: usuario.id,
+    role: usuario.role,
+  };
+
+  siguiente();
+}

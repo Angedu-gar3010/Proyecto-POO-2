@@ -1,10 +1,10 @@
 import { hash, verify } from 'argon2';
 
-export const encrypt = async (password) => {
+export const protegerContrasena = async (password) => {
   return hash(password);
 };
 
-export const checkPassword = async (
+export const verificarContrasena = async (
   hashedPassword,
   plainPassword
 ) => {

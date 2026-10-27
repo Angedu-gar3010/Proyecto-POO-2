@@ -1,105 +1,58 @@
-import User from '../user/user.model.js';
-import { USER_ROLES } from '../user/user.constants.js';
-import { encrypt, checkPassword } from '../../utils/encrypt.js';
-import { generateJwt } from '../../utils/jwt.js';
+import Usuario from '../user/user.model.js';
+import { ROLES } from '../user/user.constants.js';
+import {
+  protegerContrasena,
+  verificarContrasena,
+} from '../../utils/encrypt.js';
+import { generarJwt } from '../../utils/jwt.js';
+import { crearError } from '../../utils/error.http.js';
 
-export const register = async (req, res) => {
-  try {
-    const {
-      name,
-      username,
-      password,
-      profile
-    } = req.body;
+function responderSesion(respuesta, usuario, estado = 200) {
+  const token = generarJwt({
+    uid: usuario.id,
+    version: usuario.tokenVersion ?? 0,
+  });
 
-    const hashedPassword = await encrypt(password);
+  return respuesta.status(estado).json({
+    success: true,
+    token,
+    user: usuario.toJSON(),
+  });
+}
 
-    const user = await User.create({
-      name,
-      username,
-      password: hashedPassword,
-      profile,
-      role: USER_ROLES.USER
-    });
+export async function registrarUsuario(peticion, respuesta) {
+  const { name, username, password, role } = peticion.body;
 
-    const token = generateJwt({
-      uid: user._id.toString(),
-      role: user.role
-    });
+  const usuario = await Usuario.create({
+    name,
+    username,
+    role,
+    password: await protegerContrasena(password),
+  });
 
-    return res.status(201).json({
-      success: true,
-      message: 'Usuario registrado correctamente',
-      token,
-      user: user.toJSON()
-    });
-  } catch (error) {
-    console.error('Error al registrar usuario:', error);
+  return responderSesion(respuesta, usuario, 201);
+}
 
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: 'El nombre de usuario ya está registrado'
-      });
-    }
+export async function iniciarSesion(peticion, respuesta) {
+  const { username, password } = peticion.body;
 
-    return res.status(500).json({
-      success: false,
-      message: 'Error interno al registrar el usuario'
-    });
+  const usuario = await Usuario.findOne({ username })
+    .select('+password +tokenVersion');
+
+  if (
+    !usuario ||
+    !await verificarContrasena(usuario.password, password)
+  ) {
+    throw crearError(401, 'Usuario o contraseña incorrectos');
   }
-};
 
-export const login = async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    const user = await User.findOne({ username })
-      .select('+password');
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuario o contraseña incorrectos'
-      });
-    }
-
-    if (!user.status) {
-      return res.status(403).json({
-        success: false,
-        message: 'La cuenta está desactivada'
-      });
-    }
-
-    const validPassword = await checkPassword(
-      user.password,
-      password
-    );
-
-    if (!validPassword) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuario o contraseña incorrectos'
-      });
-    }
-
-    const token = generateJwt({
-      uid: user._id.toString(),
-      role: user.role
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: `Bienvenido, ${user.name}`,
-      token,
-      user: user.toJSON()
-    });
-  } catch (error) {
-    console.error('Error al iniciar sesión:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Error interno al iniciar sesión'
-    });
+  if (!usuario.status) {
+    throw crearError(403, 'La cuenta está desactivada');
   }
-};
+
+  if (!Object.values(ROLES).includes(usuario.role)) {
+    throw crearError(409, 'Esta cuenta necesita la migración de roles.');
+  }
+
+  return responderSesion(respuesta, usuario);
+}

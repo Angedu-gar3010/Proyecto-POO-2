@@ -1,30 +1,55 @@
 import { Router } from 'express';
-import { USER_ROLES } from '../user/user.constants.js';
-import { validateJwt } from '../../middlewares/validate.jwt.js';
-import { authorizeRoles } from '../../middlewares/validate.roles.js';
-import { validateFields } from '../../middlewares/validate.fields.js';
+import { ROLES } from '../user/user.constants.js';
+import { validarJwt } from '../../middlewares/validate.jwt.js';
+import { autorizarRoles } from '../../middlewares/validate.roles.js';
+import { validarCampos } from '../../middlewares/validate.fields.js';
+
 import {
-  scenarioIdValidator,
-  levelIdParamValidator,
-  createScenarioValidator,
-  updateScenarioValidator
+  validacionesIdEscenario,
+  validacionesCrearEscenario,
+  validacionesActualizarEscenario,
 } from '../../middlewares/validators/scenario.validators.js';
+
 import {
-  getScenariosByLevel,
-  getScenarioById,
-  getScenariosForAdmin,
-  createScenario,
-  updateScenario,
-  deactivateScenario
+  obtenerEscenariosParaAdministrador,
+  obtenerEscenarioPorId,
+  crearEscenario,
+  actualizarEscenario,
+  desactivarEscenario,
 } from './scenario.controller.js';
 
-const router = Router();
+const rutas = Router();
 
-router.get('/level/:levelId', validateJwt, levelIdParamValidator, validateFields, getScenariosByLevel);
-router.get('/admin', validateJwt, authorizeRoles(USER_ROLES.ADMIN), getScenariosForAdmin);
-router.get('/:id', validateJwt, scenarioIdValidator, validateFields, getScenarioById);
-router.post('/', validateJwt, authorizeRoles(USER_ROLES.ADMIN), createScenarioValidator, validateFields, createScenario);
-router.patch('/:id', validateJwt, authorizeRoles(USER_ROLES.ADMIN), updateScenarioValidator, validateFields, updateScenario);
-router.delete('/:id', validateJwt, authorizeRoles(USER_ROLES.ADMIN), scenarioIdValidator, validateFields, deactivateScenario);
+rutas.use(validarJwt, autorizarRoles(ROLES.ADMIN));
 
-export default router;
+rutas.get('/admin', obtenerEscenariosParaAdministrador);
+
+rutas.get(
+  '/:id',
+  validacionesIdEscenario,
+  validarCampos,
+  obtenerEscenarioPorId,
+);
+
+rutas.post(
+  '/',
+  validacionesCrearEscenario,
+  validarCampos,
+  crearEscenario,
+);
+
+rutas.patch(
+  '/:id',
+  validacionesActualizarEscenario,
+  validarCampos,
+  actualizarEscenario,
+);
+
+rutas.delete(
+  '/:id',
+  validacionesIdEscenario,
+  validarCampos,
+  desactivarEscenario,
+);
+
+export default rutas;

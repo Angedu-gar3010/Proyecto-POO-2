@@ -1,133 +1,66 @@
-import Scenario from './scenario.model.js';
+import Escenario from './scenario.model.js';
+import { crearError } from '../../utils/error.http.js';
 
-const toPlayerScenario = (scenarioDocument) => {
-  const scenario = scenarioDocument.toObject();
-  delete scenario.isFraud;
-  delete scenario.explanation;
-  delete scenario.recommendation;
-  scenario.signals = scenario.signals.map(({ _id, text }) => ({ _id, text }));
-  return scenario;
-};
+export async function obtenerEscenariosParaAdministrador(
+  _peticion,
+  respuesta,
+) {
+  const escenarios = await Escenario.find()
+    .populate('level', 'number name roles')
+    .sort({ level: 1, order: 1 });
 
-const PLAYER_SCENARIO_FIELDS = {
-  isFraud: 0,
-  explanation: 0,
-  recommendation: 0,
-  'signals.isCorrect': 0
-};
+  respuesta.json({
+    success: true,
+    scenarios: escenarios,
+  });
+}
 
-export const getScenariosByLevel = async (req, res) => {
-  const { levelId } = req.params;
+export async function obtenerEscenarioPorId(peticion, respuesta) {
+  const escenario = await Escenario.findById(peticion.params.id);
 
-  try {
-    const scenarios = await Scenario
-      .find()
-      .where('level').equals(levelId)
-      .where('active').equals(true)
-      .select(PLAYER_SCENARIO_FIELDS)
-      .populate({
-        path: 'level',
-        select: 'number name'
-      })
-      .sort('order')
-      .lean();
+  if (!escenario) throw crearError(404, 'Escenario no encontrado');
 
-    return res.status(200).json({
-      success: true,
-      scenarios
-    });
-  } catch (error) {
-    console.error('Error al consultar escenarios:', error);
+  respuesta.json({
+    success: true,
+    scenario: escenario,
+  });
+}
 
-    return res.status(500).json({
-      success: false,
-      message: 'Error interno al consultar escenarios'
-    });
-  }
-};
+export async function crearEscenario(peticion, respuesta) {
+  const escenario = await Escenario.create(peticion.body);
 
-export const getScenarioById = async (req, res) => {
-  const { id } = req.params;
+  respuesta.status(201).json({
+    success: true,
+    scenario: escenario,
+  });
+}
 
-  try {
-    const scenario = await Scenario
-      .findById(id)
-      .where('active').equals(true)
-      .select(PLAYER_SCENARIO_FIELDS)
-      .populate({
-        path: 'level',
-        select: 'number name'
-      })
-      .lean();
+export async function actualizarEscenario(peticion, respuesta) {
+  const escenario = await Escenario.findByIdAndUpdate(
+    peticion.params.id,
+    { $set: peticion.body },
+    { new: true, runValidators: true },
+  );
 
-    if (!scenario) {
-      return res.status(404).json({
-        success: false,
-        message: 'Escenario no encontrado'
-      });
-    }
+  if (!escenario) throw crearError(404, 'Escenario no encontrado');
 
-    return res.status(200).json({
-      success: true,
-      scenario
-    });
-  } catch (error) {
-    console.error('Error al consultar escenario:', error);
+  respuesta.json({
+    success: true,
+    scenario: escenario,
+  });
+}
 
-    return res.status(500).json({
-      success: false,
-      message: 'Error interno al consultar el escenario'
-    });
-  }
-};
+export async function desactivarEscenario(peticion, respuesta) {
+  const escenario = await Escenario.findByIdAndUpdate(
+    peticion.params.id,
+    { active: false },
+    { new: true },
+  );
 
-export const getScenariosForAdmin = async (_req, res) => {
-  try {
-    const scenarios = await Scenario.find().sort({ level: 1, order: 1 }).populate('level', 'number name');
-    return res.status(200).json({ success: true, scenarios });
-  } catch (error) {
-    console.error('Error al consultar escenarios:', error);
-    return res.status(500).json({ success: false, message: 'Error interno al consultar escenarios' });
-  }
-};
+  if (!escenario) throw crearError(404, 'Escenario no encontrado');
 
-export const createScenario = async (req, res) => {
-  try {
-    const scenario = await Scenario.create(req.body);
-    return res.status(201).json({ success: true, message: 'Escenario creado correctamente', scenario });
-  } catch (error) {
-    console.error('Error al crear escenario:', error);
-    if (error.code === 11000) return res.status(409).json({ success: false, message: 'Ya existe un escenario con ese orden en el nivel' });
-    return res.status(500).json({ success: false, message: 'Error interno al crear el escenario' });
-  }
-};
-
-export const updateScenario = async (req, res) => {
-  try {
-    const scenario = await Scenario.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
-    if (!scenario) return res.status(404).json({ success: false, message: 'Escenario no encontrado' });
-    return res.status(200).json({ success: true, message: 'Escenario actualizado correctamente', scenario });
-  } catch (error) {
-    console.error('Error al actualizar escenario:', error);
-    if (error.code === 11000) return res.status(409).json({ success: false, message: 'Ya existe un escenario con ese orden en el nivel' });
-    return res.status(500).json({ success: false, message: 'Error interno al actualizar el escenario' });
-  }
-};
-
-export const deactivateScenario = async (req, res) => {
-  try {
-    const scenario = await Scenario.findByIdAndUpdate(
-      req.params.id,
-      { active: false },
-      { new: true }
-    );
-    if (!scenario) return res.status(404).json({ success: false, message: 'Escenario no encontrado' });
-    return res.status(200).json({ success: true, message: 'Escenario desactivado correctamente', scenario });
-  } catch (error) {
-    console.error('Error al desactivar escenario:', error);
-    return res.status(500).json({ success: false, message: 'Error interno al desactivar el escenario' });
-  }
-};
+  respuesta.json({
+    success: true,
+    scenario: escenario,
+  });
+}

@@ -1,117 +1,83 @@
-import User from './user.model.js';
-import { encrypt, checkPassword } from '../../utils/encrypt.js';
+import Usuario from './user.model.js';
+import {
+  protegerContrasena,
+  verificarContrasena,
+} from '../../utils/encrypt.js';
+import { crearError } from '../../utils/error.http.js';
 
-export const getMe = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
+export async function obtenerMiPerfil(peticion, respuesta) {
+  const usuario = await Usuario.findById(peticion.user.id);
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Usuario no encontrado'
-      });
+  if (!usuario) throw crearError(404, 'Usuario no encontrado');
+
+  respuesta.json({
+    success: true,
+    user: usuario,
+  });
+}
+
+export async function actualizarMiPerfil(peticion, respuesta) {
+  const cambios = {};
+
+  for (const campo of ['name', 'username']) {
+    if (peticion.body[campo] !== undefined) {
+      cambios[campo] = peticion.body[campo];
     }
-
-    return res.status(200).json({
-      success: true,
-      user
-    });
-  } catch (error) {
-    console.error('Error al consultar usuario:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Error interno al consultar el usuario'
-    });
   }
-};
 
-export const updateMe = async (req, res) => {
-  try {
-    const updateData = {
-      ...req.body
-    };
+  const usuario = await Usuario.findByIdAndUpdate(
+    peticion.user.id,
+    { $set: cambios },
+    { new: true, runValidators: true },
+  );
 
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      updateData,
-      {
-        new: true,
-        runValidators: true
-      }
+  if (!usuario) throw crearError(404, 'Usuario no encontrado');
+
+  respuesta.json({
+    success: true,
+    user: usuario,
+    message: 'Datos actualizados',
+  });
+}
+
+export async function actualizarContrasena(peticion, respuesta) {
+  const usuario = await Usuario.findById(peticion.user.id)
+    .select('+password +tokenVersion');
+
+  if (!usuario) throw crearError(404, 'Usuario no encontrado');
+
+  const correcta = await verificarContrasena(
+    usuario.password,
+    peticion.body.currentPassword,
+  );
+
+  if (!correcta) {
+    throw crearError(400, 'La contraseña actual es incorrecta');
+  }
+
+  const actualizacion = await Usuario.updateOne(
+    {
+      _id: usuario.id,
+      password: usuario.password,
+    },
+    {
+      $set: {
+        password: await protegerContrasena(peticion.body.newPassword),
+      },
+      $inc: { tokenVersion: 1 },
+    },
+    { runValidators: true },
+  );
+
+  if (!actualizacion.modifiedCount) {
+    throw crearError(
+      409,
+      'La contraseña ya cambió. Inicia sesión nuevamente.',
     );
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Usuario no encontrado'
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Usuario actualizado correctamente',
-      user
-    });
-  } catch (error) {
-    console.error('Error al actualizar usuario:', error);
-
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: 'El nombre de usuario ya está registrado'
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: 'Error interno al actualizar el usuario'
-    });
   }
-};
 
-export const updatePassword = async (req, res) => {
-  try {
-    const {
-      currentPassword,
-      newPassword
-    } = req.body;
-
-    const user = await User.findById(req.user.id)
-      .select('+password');
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Usuario no encontrado'
-      });
-    }
-
-    const validPassword = await checkPassword(
-      user.password,
-      currentPassword
-    );
-
-    if (!validPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'La contraseña actual es incorrecta'
-      });
-    }
-
-    user.password = await encrypt(newPassword);
-    await user.save();
-
-    return res.status(200).json({
-      success: true,
-      message: 'Contraseña actualizada correctamente'
-    });
-  } catch (error) {
-    console.error('Error al actualizar contraseña:', error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Error interno al actualizar la contraseña'
-    });
-  }
-};
+  respuesta.json({
+    success: true,
+    message: 'Contraseña actualizada. Inicia sesión nuevamente.',
+  });
+}
