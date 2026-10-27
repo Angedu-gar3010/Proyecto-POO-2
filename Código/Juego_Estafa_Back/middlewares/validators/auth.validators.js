@@ -1,86 +1,70 @@
 import { body } from 'express-validator';
-import User from '../../src/user/user.model.js';
-import { USER_PROFILE_VALUES } from '../../src/user/user.constants.js';
+import { ROLES_JUGADOR } from '../../src/user/user.constants.js';
+
+export const validarNombre = () => body('name')
+  .isString()
+  .bail()
+  .trim()
+  .isLength({ min: 2, max: 50 })
+  .withMessage('El nombre debe tener entre 2 y 50 caracteres');
+
+export const validarUsuario = () => body('username')
+  .isString()
+  .bail()
+  .trim()
+  .toLowerCase()
+  .matches(/^[a-z0-9._-]{4,20}$/)
+  .withMessage(
+    'El usuario debe tener de 4 a 20 letras, números, puntos o guiones',
+  );
+
+export const validarContrasena = (campo) => body(campo)
+  .isString()
+  .bail()
+  .isLength({ min: 8, max: 64 })
+  .isStrongPassword({
+    minLength: 8,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1,
+    minSymbols: 0,
+  })
+  .withMessage(
+    'Usa de 8 a 64 caracteres, con mayúscula, minúscula y número',
+  );
+
+export const permitirCampos = (permitidos) => body()
+  .custom((datos) => {
+    if (
+      !datos ||
+      Array.isArray(datos) ||
+      typeof datos !== 'object' ||
+      !Object.keys(datos).length ||
+      Object.keys(datos).some((campo) => !permitidos.includes(campo))
+    ) {
+      throw new Error(
+        'Envía únicamente los campos permitidos y al menos uno',
+      );
+    }
+
+    return true;
+  });
 
 export const validacionesRegistro = [
-  body('name')
-    .exists({ values: 'falsy' })
-    .withMessage('El nombre es obligatorio')
-    .bail()
-    .isString()
-    .withMessage('El nombre debe ser texto')
-    .trim()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('El nombre debe tener entre 2 y 50 caracteres'),
-
-  body('username')
-    .exists({ values: 'falsy' })
-    .withMessage('El nombre de usuario es obligatorio')
-    .bail()
-    .isString()
-    .withMessage('El usuario debe ser texto')
-    .trim()
-    .toLowerCase()
-    .isLength({ min: 4, max: 20 })
-    .withMessage('El usuario debe tener entre 4 y 20 caracteres')
-    .matches(/^[a-z0-9._-]+$/)
-    .withMessage(
-      'El usuario solo puede contener letras, números, puntos, guiones y guion bajo'
-    )
-    .custom(async (username) => {
-      const userExists = await User.exists({ username });
-
-      if (userExists) {
-        throw new Error('El nombre de usuario ya está registrado');
-      }
-
-      return true;
-    }),
-
-  body('password')
-    .exists({ values: 'falsy' })
-    .withMessage('La contraseña es obligatoria')
-    .bail()
-    .isString()
-    .withMessage('La contraseña debe ser texto')
-    .isLength({ min: 8, max: 64 })
-    .withMessage('La contraseña debe tener entre 8 y 64 caracteres')
-    .isStrongPassword({
-      minLength: 8,
-      minLowercase: 1,
-      minUppercase: 1,
-      minNumbers: 1,
-      minSymbols: 0
-    })
-    .withMessage(
-      'La contraseña debe contener mayúscula, minúscula y número'
-    ),
-
-  body('profile')
-    .optional()
-    .isIn(USER_PROFILE_VALUES)
-    .withMessage('El perfil seleccionado no es válido'),
-
+  permitirCampos(['name', 'username', 'password', 'role']),
+  validarNombre(),
+  validarUsuario(),
+  validarContrasena('password'),
   body('role')
-    .not()
-    .exists()
-    .withMessage('El rol no puede asignarse durante el registro')
+    .isIn(ROLES_JUGADOR)
+    .withMessage('Selecciona un rol de jugador válido'),
 ];
 
 export const validacionesInicioSesion = [
-  body('username')
-    .exists({ values: 'falsy' })
-    .withMessage('El nombre de usuario es obligatorio')
-    .bail()
-    .isString()
-    .withMessage('El usuario debe ser texto')
-    .trim()
-    .toLowerCase(),
-
+  validarUsuario(),
   body('password')
-    .exists({ values: 'falsy' })
-    .withMessage('La contraseña es obligatoria')
-    .bail()
     .isString()
-    .withMessage('La contraseña debe ser texto')
+    .bail()
+    .notEmpty()
+    .withMessage('Ingresa tu contraseña'),
 ];

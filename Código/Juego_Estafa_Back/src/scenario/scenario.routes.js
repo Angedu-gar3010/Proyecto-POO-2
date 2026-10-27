@@ -1,73 +1,55 @@
 import { Router } from 'express';
-import { USER_ROLES } from '../user/user.constants.js';
+import { ROLES } from '../user/user.constants.js';
 import { validarJwt } from '../../middlewares/validate.jwt.js';
 import { autorizarRoles } from '../../middlewares/validate.roles.js';
 import { validarCampos } from '../../middlewares/validate.fields.js';
+
 import {
   validacionesIdEscenario,
-  validacionesParametroIdNivel,
   validacionesCrearEscenario,
-  validacionesActualizarEscenario
+  validacionesActualizarEscenario,
 } from '../../middlewares/validators/scenario.validators.js';
+
 import {
-  obtenerEscenariosPorNivel,
-  obtenerEscenarioPorId,
   obtenerEscenariosParaAdministrador,
+  obtenerEscenarioPorId,
   crearEscenario,
   actualizarEscenario,
-  desactivarEscenario
+  desactivarEscenario,
 } from './scenario.controller.js';
 
-const router = Router();
+const rutas = Router();
 
-router.get(
-  '/level/:levelId',
-  validarJwt,
-  validacionesParametroIdNivel,
-  validarCampos,
-  obtenerEscenariosPorNivel
-);
+rutas.use(validarJwt, autorizarRoles(ROLES.ADMIN));
 
-router.get(
-  '/admin',
-  validarJwt,
-  autorizarRoles(USER_ROLES.ADMIN),
-  obtenerEscenariosParaAdministrador
-);
+rutas.get('/admin', obtenerEscenariosParaAdministrador);
 
-router.get(
+rutas.get(
   '/:id',
-  validarJwt,
   validacionesIdEscenario,
   validarCampos,
-  obtenerEscenarioPorId
+  obtenerEscenarioPorId,
 );
 
-router.post(
+rutas.post(
   '/',
-  validarJwt,
-  autorizarRoles(USER_ROLES.ADMIN),
   validacionesCrearEscenario,
   validarCampos,
-  crearEscenario
+  crearEscenario,
 );
 
-router.patch(
+rutas.patch(
   '/:id',
-  validarJwt,
-  autorizarRoles(USER_ROLES.ADMIN),
   validacionesActualizarEscenario,
   validarCampos,
-  actualizarEscenario
+  actualizarEscenario,
 );
 
-router.delete(
+rutas.delete(
   '/:id',
-  validarJwt,
-  autorizarRoles(USER_ROLES.ADMIN),
   validacionesIdEscenario,
   validarCampos,
-  desactivarEscenario
+  desactivarEscenario,
 );
 
-export default router;
+export default rutas;

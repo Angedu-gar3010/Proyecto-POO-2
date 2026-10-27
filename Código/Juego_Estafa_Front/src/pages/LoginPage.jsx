@@ -1,101 +1,96 @@
 import { useState } from 'react';
 import EstructuraAutenticacion from '../components/AuthLayout.jsx';
 import CampoFormulario from '../components/FormField.jsx';
-import { iniciarSesion, guardarSesion } from '../services/auth.js';
+import { iniciarSesion } from '../services/auth.js';
+import { guardarSesion } from '../services/sesion.js';
 
-export default function PaginaInicioSesion({ alCrearCuenta }) {
-  const [pending, establecerCargando] = useState(false);
-  const [feedback, establecerMensaje] = useState(null);
+export default function PaginaInicioSesion({
+  alCrearCuenta,
+  alAutenticar,
+  aviso,
+}) {
+  const [enviando, establecerEnviando] = useState(false);
+  const [error, establecerError] = useState('');
 
-  async function manejarEnvio(event) {
-    event.preventDefault();
+  async function enviarFormulario(evento) {
+    evento.preventDefault();
 
-    if (pending) return;
+    if (enviando) return;
 
-    const fields = new FormData(event.currentTarget);
+    const campos = new FormData(evento.currentTarget);
 
-    establecerCargando(true);
-    establecerMensaje(null);
+    establecerEnviando(true);
+    establecerError('');
 
     try {
-      const data = await iniciarSesion({
-        username: fields.get('username'),
-        password: fields.get('password'),
+      const respuesta = await iniciarSesion({
+        usuario: campos.get('usuario'),
+        contrasena: campos.get('contrasena'),
       });
 
-      guardarSesion(data, fields.has('remember'));
-
-      establecerMensaje({
-        type: 'success',
-        message: data.message || 'Sesión iniciada correctamente.',
-      });
-    } catch (error) {
-      establecerMensaje({
-        type: 'error',
-        message: error.message,
-      });
+      guardarSesion(respuesta.token, campos.has('recordar'));
+      alAutenticar(respuesta.user);
+    } catch (fallo) {
+      establecerError(fallo.message);
     } finally {
-      establecerCargando(false);
+      establecerEnviando(false);
     }
   }
 
   return (
     <EstructuraAutenticacion
-      eyebrow="Bienvenido de nuevo"
-      title="Iniciar sesión"
-      description="Continúa aprendiendo a protegerte en internet."
+      encabezado="Bienvenido de nuevo"
+      titulo="Iniciar sesión"
+      descripcion="Continúa aprendiendo a protegerte en internet."
     >
-      <form className="auth-form" onSubmit={manejarEnvio}>
-        <CampoFormulario id="username" label="Nombre de usuario">
+      <form className="auth-form" onSubmit={enviarFormulario}>
+        <CampoFormulario
+          id="usuario"
+          etiqueta="Nombre de usuario"
+        >
           <input
-            id="username"
-            name="username"
-            type="text"
+            id="usuario"
+            name="usuario"
             autoComplete="username"
-            placeholder="Ingresa tu usuario"
             minLength={4}
             maxLength={20}
             required
           />
         </CampoFormulario>
 
-        <CampoFormulario id="password" label="Contraseña" icon="lock">
+        <CampoFormulario id="contrasena" etiqueta="Contraseña">
           <input
-            id="password"
-            name="password"
+            id="contrasena"
+            name="contrasena"
             type="password"
             autoComplete="current-password"
-            placeholder="Ingresa tu contraseña"
             required
           />
         </CampoFormulario>
 
         <label className="remember-option">
-          <input type="checkbox" name="remember" />
-          <span>Recordar mi sesión</span>
+          <input name="recordar" type="checkbox" />
+          Recordar mi sesión
         </label>
 
-        <button
-          className="primary-button"
-          type="submit"
-          disabled={pending}
-        >
-          {pending ? 'Ingresando...' : 'Ingresar'}
-          {!pending && <span aria-hidden="true">→</span>}
+        <button className="primary-button" disabled={enviando}>
+          {enviando ? 'Ingresando…' : 'Ingresar'}
         </button>
 
-        {feedback && (
-          <p className={`form-feedback ${feedback.type}`} role="status">
-            {feedback.message}
-          </p>
+        {aviso && (
+          <p className="form-feedback" role="status">{aviso}</p>
+        )}
+
+        {error && (
+          <p className="form-feedback error" role="alert">{error}</p>
         )}
       </form>
 
       <p className="switch-copy">
-        ¿Aún no tienes una cuenta?{' '}
+        ¿Aún no tienes cuenta?{' '}
         <button
-          className="text-button"
           type="button"
+          className="text-button"
           onClick={alCrearCuenta}
         >
           Crear cuenta
