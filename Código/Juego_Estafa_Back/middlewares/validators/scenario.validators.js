@@ -1,8 +1,13 @@
 import { body, param } from 'express-validator';
-import Level from '../../src/level/level.model.js';
+import Nivel from '../../src/level/level.model.js';
 import { SCENARIO_TYPE_VALUES } from '../../src/scenario/scenario.constants.js';
+import { permitirCampos } from './auth.validators.js';
 
-const allowedFields = [
+export const validacionesIdEscenario = [
+  param('id').isMongoId(),
+];
+
+const campos = [
   'title',
   'description',
   'type',
@@ -14,210 +19,95 @@ const allowedFields = [
   'explanation',
   'recommendation',
   'points',
-  'active'
+  'active',
 ];
 
-const validarExistenciaNivel = async (levelId) => {
-  const exists = await Level.exists({
-    _id: levelId,
-    active: true
-  });
+function reglasEscenario(opcional = false) {
+  const campo = (nombre) => (
+    opcional ? body(nombre).optional() : body(nombre)
+  );
 
-  if (!exists) {
-    throw new Error('El nivel no existe o está inactivo');
-  }
+  return [
+    permitirCampos(campos),
 
-  return true;
-};
+    campo('title')
+      .isString().bail().trim()
+      .isLength({ min: 2, max: 120 }),
 
-const validacionesOpcionalesEscenario = [
-  body('title')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ min: 2, max: 120 })
-    .withMessage('El título debe tener entre 2 y 120 caracteres'),
+    campo('description')
+      .isString().bail().trim()
+      .isLength({ min: 10, max: 500 }),
 
-  body('description')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ min: 10, max: 500 })
-    .withMessage('La descripción debe tener entre 10 y 500 caracteres'),
+    campo('type').isIn(SCENARIO_TYPE_VALUES),
 
-  body('type')
-    .optional()
-    .isIn(SCENARIO_TYPE_VALUES)
-    .withMessage('El tipo de escenario no es válido'),
+    campo('level')
+      .isMongoId()
+      .bail()
+      .custom(async (id) => {
+        if (!await Nivel.exists({ _id: id, active: true })) {
+          throw new Error('El nivel no existe o está inactivo');
+        }
+      }),
 
-  body('level')
-    .optional()
-    .isMongoId()
-    .withMessage('El nivel no es válido')
-    .bail()
-    .custom(validarExistenciaNivel),
+    campo('order').isInt({ min: 1 }).toInt(),
 
-  body('order')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('El orden debe ser un entero mayor que cero')
-    .toInt(),
+    campo('content')
+      .isObject()
+      .bail()
+      .custom((contenido) => {
+        if (
+          typeof contenido.message !== 'string' ||
+          !contenido.message.trim() ||
+          contenido.message.length > 5000
+        ) {
+          throw new Error(
+            'El contenido debe incluir un mensaje de 1 a 5000 caracteres',
+          );
+        }
 
-  body('content')
-    .optional()
-    .isObject()
-    .withMessage('El contenido debe ser un objeto'),
+        return true;
+      }),
 
-  body('content.message')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ min: 1, max: 5000 })
-    .withMessage('El mensaje debe tener entre 1 y 5000 caracteres'),
+    campo('isFraud')
+      .custom((valor) => typeof valor === 'boolean'),
 
-  body('isFraud')
-    .optional()
-    .isBoolean()
-    .withMessage('isFraud debe ser booleano')
-    .toBoolean(),
+    campo('signals')
+      .isArray({ min: 1, max: 50 })
+      .bail()
+      .custom((senales) => {
+        const invalidas = senales.some((senal) => (
+          !senal ||
+          typeof senal.text !== 'string' ||
+          !senal.text.trim() ||
+          senal.text.length > 250 ||
+          typeof senal.isCorrect !== 'boolean'
+        ));
 
-  body('signals')
-    .optional()
-    .isArray({ min: 1 })
-    .withMessage('Debes enviar al menos una señal'),
+        if (invalidas) {
+          throw new Error(
+            'Cada señal necesita texto e isCorrect booleano',
+          );
+        }
 
-  body('signals.*.text')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ min: 1, max: 250 })
-    .withMessage('Cada señal debe tener entre 1 y 250 caracteres'),
+        return true;
+      }),
 
-  body('signals.*.isCorrect')
-    .optional()
-    .isBoolean()
-    .withMessage('isCorrect debe ser booleano')
-    .toBoolean(),
+    campo('explanation')
+      .isString().bail().trim()
+      .isLength({ min: 10, max: 2000 }),
 
-  body('explanation')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ min: 10, max: 2000 })
-    .withMessage('La explicación debe tener entre 10 y 2000 caracteres'),
+    campo('recommendation')
+      .isString().bail().trim()
+      .isLength({ min: 10, max: 2000 }),
 
-  body('recommendation')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ min: 10, max: 2000 })
-    .withMessage('La recomendación debe tener entre 10 y 2000 caracteres'),
+    body('points').optional().isInt({ min: 0 }).toInt(),
+    body('active').optional().isBoolean().toBoolean(),
+  ];
+}
 
-  body('points')
-    .optional()
-    .isInt({ min: 0 })
-    .withMessage('Los puntos deben ser un entero no negativo')
-    .toInt(),
-
-  body('active')
-    .optional()
-    .isBoolean()
-    .withMessage('active debe ser booleano')
-    .toBoolean()
-];
-
-export const validacionesIdEscenario = [
-  param('id')
-    .isMongoId()
-    .withMessage('El identificador del escenario no es válido')
-];
-
-export const validacionesParametroIdNivel = [
-  param('levelId')
-    .isMongoId()
-    .withMessage('El identificador del nivel no es válido')
-];
-
-export const validacionesCrearEscenario = [
-  body('title')
-    .exists({ values: 'falsy' })
-    .withMessage('El título es obligatorio'),
-
-  body('description')
-    .exists({ values: 'falsy' })
-    .withMessage('La descripción es obligatoria'),
-
-  body('type')
-    .exists({ values: 'falsy' })
-    .withMessage('El tipo es obligatorio'),
-
-  body('level')
-    .exists({ values: 'falsy' })
-    .withMessage('El nivel es obligatorio'),
-
-  body('order')
-    .exists({ values: 'falsy' })
-    .withMessage('El orden es obligatorio'),
-
-  body('content')
-    .exists()
-    .withMessage('El contenido es obligatorio'),
-
-  body('content.message')
-    .exists({ values: 'falsy' })
-    .withMessage('El mensaje es obligatorio'),
-
-  body('isFraud')
-    .exists()
-    .withMessage('Debes indicar si es fraude'),
-
-  body('signals')
-    .exists()
-    .withMessage('Las señales son obligatorias'),
-
-  body('explanation')
-    .exists({ values: 'falsy' })
-    .withMessage('La explicación es obligatoria'),
-
-  body('recommendation')
-    .exists({ values: 'falsy' })
-    .withMessage('La recomendación es obligatoria'),
-
-  ...validacionesOpcionalesEscenario,
-
-  body().custom((value) => {
-    const invalid = Object.keys(value).filter(
-      (field) => !allowedFields.includes(field)
-    );
-
-    if (invalid.length) {
-      throw new Error(`Campos no permitidos: ${invalid.join(', ')}`);
-    }
-
-    return true;
-  })
-];
+export const validacionesCrearEscenario = reglasEscenario();
 
 export const validacionesActualizarEscenario = [
   ...validacionesIdEscenario,
-
-  body().custom((value) => {
-    const fields = Object.keys(value);
-
-    if (!fields.length) {
-      throw new Error('Debes enviar al menos un campo');
-    }
-
-    const invalid = fields.filter(
-      (field) => !allowedFields.includes(field)
-    );
-
-    if (invalid.length) {
-      throw new Error(`Campos no permitidos: ${invalid.join(', ')}`);
-    }
-
-    return true;
-  }),
-
-  ...validacionesOpcionalesEscenario
+  ...reglasEscenario(true),
 ];
