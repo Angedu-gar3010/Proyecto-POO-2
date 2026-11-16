@@ -1,4 +1,4 @@
-# Proyecto POO - Entrega 2 - Grupo 5
+# Proyecto POO - Grupo 5
 ## Juego de Ciberseguridad
 
 ### Integrantes
