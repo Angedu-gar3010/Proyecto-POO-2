@@ -2,9 +2,34 @@ import { useEffect, useState } from 'react';
 import { solicitarApi } from '../services/api.js';
 
 import IconoNivel from '../components/IconoNivel.jsx';
-import TarjetaNivel from '../components/TarjetaNivel.jsx'
+import TarjetaNivel from '../components/TarjetaNivel.jsx';
 import ProgresoGeneral from '../components/ProgresoGeneral.jsx';
 import { nombresRoles } from '../utils/roles.js';
+
+const estiloPagina = {
+  display: 'flow-root',
+  width: '100%',
+  minWidth: 0,
+  boxSizing: 'border-box',
+};
+
+const estiloCajaNiveles = {
+  width: '100%',
+  maxWidth: '100%',
+  minWidth: 0,
+  maxHeight: 'min(560px, 60dvh)',
+  overflowY: 'auto',
+  overflowX: 'hidden',
+  padding: '16px',
+  margin: '20px 0',
+  border: '1px solid #dce6fa',
+  borderRadius: '18px',
+  background: '#f6f9ff',
+  boxSizing: 'border-box',
+  scrollbarGutter: 'stable',
+  scrollbarWidth: 'thin',
+  scrollbarColor: '#a7b8e8 #f3f6ff',
+};
 
 export default function PaginaNiveles({
   usuario,
@@ -21,21 +46,28 @@ export default function PaginaNiveles({
 
     solicitarApi('/levels', {
       senal: controlador.signal,
-    }).then((respuesta) => {
-      if (!controlador.signal.aborted) {
-        establecerDatos(respuesta);
-      }
-    }).catch((fallo) => {
-      if (!controlador.signal.aborted) {
-        establecerError(fallo.message);
-      }
-    });
+    })
+      .then((respuesta) => {
+        if (!controlador.signal.aborted) {
+          establecerDatos(respuesta);
+        }
+      })
+      .catch((fallo) => {
+        if (!controlador.signal.aborted) {
+          establecerError(fallo.message);
+        }
+      });
 
     return () => controlador.abort();
   }, [intento]);
 
+  function reintentarCarga() {
+    establecerError('');
+    establecerIntento((actual) => actual + 1);
+  }
+
   return (
-    <>
+    <div style={estiloPagina}>
       <header className="cabecera-niveles">
         <div className="marca-juego">
           <IconoNivel />
@@ -48,11 +80,15 @@ export default function PaginaNiveles({
               ? 'Niveles del juego'
               : 'Selecciona un nivel'}
           </h1>
-          <p>Aprende a reconocer diferentes tipos de estafas</p>
+
+          <p>
+            Aprende a reconocer diferentes tipos de estafas
+          </p>
         </div>
 
         <div className="puntos-juego">
           <IconoNivel tipo="estrella" />
+
           <strong>
             {datos ? datos.puntosTotales : '—'} puntos
           </strong>
@@ -67,12 +103,11 @@ export default function PaginaNiveles({
       {error ? (
         <div role="alert">
           <p>{error}</p>
+
           <button
+            type="button"
             className="boton-juego"
-            onClick={() => {
-              establecerError('');
-              establecerIntento((actual) => actual + 1);
-            }}
+            onClick={reintentarCarga}
           >
             Reintentar
           </button>
@@ -81,34 +116,43 @@ export default function PaginaNiveles({
         <p role="status">Cargando niveles…</p>
       ) : (
         <>
-          {datos.niveles.length ? (
-            <section
-              className="rejilla-niveles"
-              aria-label="Niveles disponibles"
-            >
-              {datos.niveles.map((nivel) => (
-                <TarjetaNivel
-                  key={nivel.id}
-                  nivel={nivel}
-                  administrador={administrador}
-                  alSeleccionar={alSeleccionar}
-                />
-              ))}
-            </section>
-          ) : (
-            <p>Todavía no hay niveles asignados a tu rol.</p>
-          )}
+          <section
+            style={estiloCajaNiveles}
+            aria-label="Listado de niveles disponibles"
+            tabIndex={0}
+          >
+            {datos.niveles.length > 0 ? (
+              <div className="rejilla-niveles">
+                {datos.niveles.map((nivel) => (
+                  <TarjetaNivel
+                    key={nivel.id}
+                    nivel={nivel}
+                    administrador={administrador}
+                    alSeleccionar={alSeleccionar}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p>
+                {administrador
+                  ? 'Todavía no hay niveles disponibles.'
+                  : 'Todavía no hay niveles asignados a tu rol.'}
+              </p>
+            )}
+          </section>
 
           {!administrador && (
             <ProgresoGeneral
               completados={
-                datos.niveles.filter((nivel) => nivel.completado).length
+                datos.niveles.filter(
+                  (nivel) => nivel.completado,
+                ).length
               }
               total={datos.niveles.length}
             />
           )}
         </>
       )}
-    </>
+    </div>
   );
 }

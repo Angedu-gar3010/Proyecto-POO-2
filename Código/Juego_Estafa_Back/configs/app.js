@@ -7,7 +7,12 @@ import rutasAutenticacion from '../src/auth/auth.routes.js';
 import rutasUsuario from '../src/user/user.routes.js';
 import rutasNivel from '../src/level/level.routes.js';
 import rutasEscenario from '../src/scenario/scenario.routes.js';
-import { limitadorSolicitudes } from '../middlewares/rate.limit.js';
+import rutasAdministrador from '../src/admin/admin.routes.js';
+
+import {
+  limitadorSolicitudes,
+  limitadorAutenticacion,
+} from '../middlewares/rate.limit.js';
 
 export function crearAplicacion() {
   const aplicacion = express();
@@ -28,10 +33,16 @@ export function crearAplicacion() {
     });
   });
 
-  aplicacion.use('/api/v1/auth', rutasAutenticacion);
+  aplicacion.use(
+    '/api/v1/auth',
+    limitadorAutenticacion,
+    rutasAutenticacion,
+  );
+
   aplicacion.use('/api/v1/users', rutasUsuario);
   aplicacion.use('/api/v1/levels', rutasNivel);
   aplicacion.use('/api/v1/scenarios', rutasEscenario);
+  aplicacion.use('/api/v1/admin', rutasAdministrador);
 
   aplicacion.use((_peticion, respuesta) => {
     respuesta.status(404).json({

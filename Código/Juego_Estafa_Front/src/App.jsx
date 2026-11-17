@@ -5,17 +5,22 @@ import PaginaRegistro from './pages/RegisterPage.jsx';
 import PaginaNiveles from './pages/PaginaNiveles.jsx';
 import PaginaPerfil from './pages/PaginaPerfil.jsx';
 import PaginaJuego from './pages/PaginaJuego.jsx';
+import PaginaAdministracion from './pages/PaginaAdministracion.jsx';
 import EstructuraJuego from './components/EstructuraJuego.jsx';
 
 import { solicitarApi } from './services/api.js';
 import { obtenerToken, eliminarSesion } from './services/sesion.js';
 
 import './styles/juego.css';
+import './styles/administracion.css';
 
 export default function Aplicacion() {
   const [usuario, establecerUsuario] = useState(null);
   const [pagina, establecerPagina] = useState('ingreso');
   const [nivel, establecerNivel] = useState(null);
+  const [nivelAdministrado, establecerNivelAdministrado] =
+    useState(null);
+
   const [cargando, establecerCargando] = useState(true);
   const [error, establecerError] = useState('');
   const [aviso, establecerAviso] = useState('');
@@ -33,7 +38,12 @@ export default function Aplicacion() {
 
           if (!controlador.signal.aborted) {
             establecerUsuario(datos.user);
-            establecerPagina('niveles');
+
+            establecerPagina(
+              datos.user.role === 'ADMIN'
+                ? 'administracion'
+                : 'niveles',
+            );
           }
         }
       } catch (fallo) {
@@ -56,16 +66,24 @@ export default function Aplicacion() {
     function caducarSesion() {
       establecerUsuario(null);
       establecerNivel(null);
+      establecerNivelAdministrado(null);
       establecerPagina('ingreso');
+
       establecerAviso(
         'Tu sesión terminó. Inicia sesión nuevamente.',
       );
     }
 
-    window.addEventListener('sesion-caducada', caducarSesion);
+    window.addEventListener(
+      'sesion-caducada',
+      caducarSesion,
+    );
 
     return () => {
-      window.removeEventListener('sesion-caducada', caducarSesion);
+      window.removeEventListener(
+        'sesion-caducada',
+        caducarSesion,
+      );
     };
   }, []);
 
@@ -73,6 +91,7 @@ export default function Aplicacion() {
     eliminarSesion();
     establecerUsuario(null);
     establecerNivel(null);
+    establecerNivelAdministrado(null);
     establecerError('');
     establecerAviso(mensaje);
     establecerPagina('ingreso');
@@ -80,8 +99,15 @@ export default function Aplicacion() {
 
   function autenticar(datosUsuario) {
     establecerUsuario(datosUsuario);
+    establecerNivel(null);
+    establecerNivelAdministrado(null);
     establecerAviso('');
-    establecerPagina('niveles');
+
+    establecerPagina(
+      datosUsuario.role === 'ADMIN'
+        ? 'administracion'
+        : 'niveles',
+    );
   }
 
   function reintentar() {
@@ -90,10 +116,31 @@ export default function Aplicacion() {
     establecerIntento((actual) => actual + 1);
   }
 
+  function abrirAdministracion() {
+    if (usuario?.role !== 'ADMIN') return;
+
+    establecerNivelAdministrado(null);
+    establecerPagina('administracion');
+  }
+
+  function seleccionarNivel(seleccionado) {
+    if (usuario?.role === 'ADMIN') {
+      establecerNivelAdministrado(seleccionado.id);
+      establecerPagina('administracion');
+      return;
+    }
+
+    establecerNivel(seleccionado);
+    establecerPagina('juego');
+  }
+
   if (cargando || error) {
     return (
       <main className="pantalla-espera">
-        <section className="panel-espera" aria-live="polite">
+        <section
+          className="panel-espera"
+          aria-live="polite"
+        >
           <h1>
             {cargando
               ? 'Verificando tu sesión…'
@@ -105,6 +152,7 @@ export default function Aplicacion() {
               <p role="alert">{error}</p>
 
               <button
+                type="button"
                 className="boton-juego"
                 onClick={reintentar}
               >
@@ -112,6 +160,7 @@ export default function Aplicacion() {
               </button>
 
               <button
+                type="button"
                 className="enlace-juego"
                 onClick={() => cerrarSesion()}
               >
@@ -128,7 +177,9 @@ export default function Aplicacion() {
     return pagina === 'registro' ? (
       <PaginaRegistro
         alAutenticar={autenticar}
-        alVolverAlInicioSesion={() => establecerPagina('ingreso')}
+        alVolverAlInicioSesion={() =>
+          establecerPagina('ingreso')
+        }
       />
     ) : (
       <PaginaInicioSesion
@@ -141,19 +192,31 @@ export default function Aplicacion() {
 
   return (
     <EstructuraJuego
+      administrador={usuario.role === 'ADMIN'}
+      alAdministrar={abrirAdministracion}
       alVerNiveles={() => establecerPagina('niveles')}
       alVerPerfil={() => establecerPagina('perfil')}
       alCerrarSesion={() => cerrarSesion()}
     >
-      {pagina === 'perfil' ? (
+      {pagina === 'administracion' &&
+      usuario.role === 'ADMIN' ? (
+        <PaginaAdministracion
+          key={nivelAdministrado || 'administracion-general'}
+          nivelInicialId={nivelAdministrado}
+        />
+      ) : pagina === 'perfil' ? (
         <PaginaPerfil
           usuario={usuario}
           alActualizar={establecerUsuario}
-          alCambiarContrasena={() => cerrarSesion(
-            'Contraseña actualizada. Inicia sesión nuevamente.',
-          )}
+          alCambiarContrasena={() =>
+            cerrarSesion(
+              'Contraseña actualizada. Inicia sesión nuevamente.',
+            )
+          }
         />
-      ) : pagina === 'juego' && nivel ? (
+      ) : pagina === 'juego' &&
+        nivel &&
+        usuario.role !== 'ADMIN' ? (
         <PaginaJuego
           key={nivel.id}
           nivel={nivel}
@@ -162,10 +225,7 @@ export default function Aplicacion() {
       ) : (
         <PaginaNiveles
           usuario={usuario}
-          alSeleccionar={(seleccionado) => {
-            establecerNivel(seleccionado);
-            establecerPagina('juego');
-          }}
+          alSeleccionar={seleccionarNivel}
         />
       )}
     </EstructuraJuego>

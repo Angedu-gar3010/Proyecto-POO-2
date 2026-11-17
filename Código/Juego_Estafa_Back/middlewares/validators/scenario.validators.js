@@ -22,6 +22,16 @@ const campos = [
   'active',
 ];
 
+const limitesContenido = {
+  sender: 120,
+  recipient: 120,
+  subject: 180,
+  message: 5000,
+  url: 500,
+  fileName: 180,
+  imageUrl: 1000,
+};
+
 function reglasEscenario(opcional = false) {
   const campo = (nombre) => (
     opcional ? body(nombre).optional() : body(nombre)
@@ -44,9 +54,11 @@ function reglasEscenario(opcional = false) {
       .isMongoId()
       .bail()
       .custom(async (id) => {
-        if (!await Nivel.exists({ _id: id, active: true })) {
-          throw new Error('El nivel no existe o está inactivo');
+        if (!await Nivel.exists({ _id: id })) {
+          throw new Error('El nivel no existe');
         }
+
+        return true;
       }),
 
     campo('order').isInt({ min: 1 }).toInt(),
@@ -57,12 +69,19 @@ function reglasEscenario(opcional = false) {
       .custom((contenido) => {
         if (
           typeof contenido.message !== 'string' ||
-          !contenido.message.trim() ||
-          contenido.message.length > 5000
+          !contenido.message.trim()
         ) {
-          throw new Error(
-            'El contenido debe incluir un mensaje de 1 a 5000 caracteres',
-          );
+          throw new Error('El mensaje es obligatorio');
+        }
+
+        for (const [nombre, valor] of Object.entries(contenido)) {
+          if (
+            !Object.hasOwn(limitesContenido, nombre) ||
+            typeof valor !== 'string' ||
+            valor.length > limitesContenido[nombre]
+          ) {
+            throw new Error(`Campo de contenido inválido: ${nombre}`);
+          }
         }
 
         return true;
@@ -75,22 +94,43 @@ function reglasEscenario(opcional = false) {
       .isArray({ min: 1, max: 50 })
       .bail()
       .custom((senales) => {
-        const invalidas = senales.some((senal) => (
-          !senal ||
-          typeof senal.text !== 'string' ||
-          !senal.text.trim() ||
-          senal.text.length > 250 ||
-          typeof senal.isCorrect !== 'boolean'
-        ));
+        const textos = new Set();
+        const identificadores = new Set();
 
-        if (invalidas) {
-          throw new Error(
-            'Cada señal necesita texto e isCorrect booleano',
-          );
+        for (const senal of senales) {
+          if (
+            !senal ||
+            typeof senal.text !== 'string' ||
+            !senal.text.trim() ||
+            senal.text.length > 250 ||
+            typeof senal.isCorrect !== 'boolean'
+          ) {
+            throw new Error(
+              'Cada señal necesita texto e isCorrect booleano',
+            );
+          }
+
+          const texto = senal.text.trim().toLowerCase();
+
+          if (textos.has(texto)) {
+            throw new Error('No repitas el texto de una señal');
+          }
+
+          textos.add(texto);
+
+          if (senal._id) {
+            if (identificadores.has(senal._id)) {
+              throw new Error('No repitas identificadores de señales');
+            }
+
+            identificadores.add(senal._id);
+          }
         }
 
         return true;
       }),
+
+    body('signals.*._id').optional().isMongoId(),
 
     campo('explanation')
       .isString().bail().trim()

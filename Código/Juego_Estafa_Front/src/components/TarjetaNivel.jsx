@@ -18,7 +18,9 @@ export default function TarjetaNivel({
     nivel.total === 0;
 
   return (
-    <article className={`tarjeta-nivel tarjeta-nivel--${nivel.estado}`}>
+    <article
+      className={`tarjeta-nivel tarjeta-nivel--${nivel.estado}`}
+    >
       <div className="contenido-nivel">
         <IconoNivel
           tipo={nivel.roles[0]}
@@ -26,16 +28,23 @@ export default function TarjetaNivel({
         />
 
         <div>
-          <p className="numero-nivel">Nivel {nivel.numero}</p>
+          <p className="numero-nivel">
+            Nivel {nivel.numero}
+          </p>
+
           <h2>{nivel.nombre}</h2>
 
-          <p className={`estado-nivel estado-nivel--${nivel.estado}`}>
+          <p
+            className={`estado-nivel estado-nivel--${nivel.estado}`}
+          >
             {nivel.estado === 'completado' && (
               <span aria-hidden="true">✓ </span>
             )}
+
             {nivel.estado === 'bloqueado' && (
               <span aria-hidden="true">🔒 </span>
             )}
+
             {etiquetas[nivel.estado]}
           </p>
 
@@ -48,9 +57,11 @@ export default function TarjetaNivel({
               <IconoNivel
                 key={numero}
                 tipo="estrella"
-                clase={numero <= nivel.estrellas
-                  ? 'estrella-ganada'
-                  : 'estrella-pendiente'}
+                clase={
+                  numero <= nivel.estrellas
+                    ? 'estrella-ganada'
+                    : 'estrella-pendiente'
+                }
               />
             ))}
           </div>
@@ -58,10 +69,24 @@ export default function TarjetaNivel({
       </div>
 
       {administrador ? (
-        <p className="detalle-nivel">
-          {nivel.roles.map((rol) => nombresRoles[rol]).join(' · ')}
-          {' · '}{nivel.total} escenarios
-        </p>
+        <>
+          <p className="detalle-nivel">
+            {nivel.roles
+              .map((rol) => nombresRoles[rol])
+              .join(' · ')}
+            {' · '}
+            {nivel.total} escenarios
+          </p>
+
+          <button
+            type="button"
+            className="boton-juego boton-juego--secundario"
+            aria-label={`Administrar nivel: ${nivel.nombre}`}
+            onClick={() => alSeleccionar(nivel)}
+          >
+            Administrar nivel
+          </button>
+        </>
       ) : (
         <>
           {nivel.estado === 'bloqueado' && (
@@ -71,6 +96,7 @@ export default function TarjetaNivel({
           )}
 
           <button
+            type="button"
             className={`boton-juego ${
               nivel.estado === 'en_progreso'
                 ? ''
