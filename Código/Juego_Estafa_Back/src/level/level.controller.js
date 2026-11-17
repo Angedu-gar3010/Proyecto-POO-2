@@ -65,7 +65,7 @@ export async function obtenerNiveles(peticion, respuesta) {
     },
   ]);
 
-  const resultado = niveles.map((nivel) => {
+  const resultado = niveles.map((nivel, indice) => {
     const progreso = progresos.find(
       (registro) => String(registro.nivel) === String(nivel._id),
     );
@@ -88,7 +88,7 @@ export async function obtenerNiveles(peticion, respuesta) {
 
     return {
       id: nivel._id,
-      numero: nivel.number,
+      numero: administrador ? nivel.number : indice + 1,
       nombre: nivel.name,
       descripcion: nivel.description,
       roles: nivel.roles || [],
@@ -117,7 +117,11 @@ export async function obtenerNivelPorId(peticion, respuesta) {
 
 export async function crearNivel(peticion, respuesta) {
   const nivel = await Nivel.create(peticion.body);
-  respuesta.status(201).json({ success: true, level: nivel });
+
+  respuesta.status(201).json({
+    success: true,
+    level: nivel,
+  });
 }
 
 export async function actualizarNivel(peticion, respuesta) {

@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import VentanaModal from './ventanaModal'
+import VentanaModal from './ventanaModal.jsx';
 
 export default function EstructuraJuego({
+  administrador,
+  alAdministrar,
   alVerNiveles,
   alVerPerfil,
   alCerrarSesion,
@@ -17,6 +19,12 @@ export default function EstructuraJuego({
           aria-label="Navegación principal"
         >
           <button onClick={alVerNiveles}>Niveles</button>
+
+          {administrador && (
+            <button onClick={alAdministrar}>
+              Administración
+            </button>
+          )}
 
           <button onClick={() => establecerInstrucciones(true)}>
             Instrucciones
@@ -65,8 +73,8 @@ export default function EstructuraJuego({
           </p>
 
           <p>
-            El administrador consulta los niveles y no participa como
-            jugador.
+            El administrador gestiona niveles y escenarios, consulta
+            el progreso y puede activar o desactivar cuentas de jugadores.
           </p>
         </VentanaModal>
       )}

@@ -2,6 +2,12 @@ import { Schema, model } from 'mongoose';
 import { ROLES_JUGADOR } from '../user/user.constants.js';
 
 const esquemaNivel = new Schema({
+  codigoSemilla: {
+    type: String,
+    unique: true,
+    sparse: true,
+    maxlength: 80,
+  },
   number: {
     type: Number,
     required: true,
